@@ -1,0 +1,5 @@
+torch
+transformers
+accelerate
+bitsandbytes   # only for the 4-bit judge
+nltk           # optional: official word counts for the length column
