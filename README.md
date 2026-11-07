@@ -9,7 +9,7 @@ HelloBench data ──► Qwen2-7B-Instruct writes the answers ──► Qwen2.5
 
 ## Results
 
-**Score** = HelloBench's rescaled score, (weighted checklist score − 75) × 4: 100 means every checklist item was fully met, 0 means every item was "mostly met" (0.75), negative means worse than that. **Raw** = weighted checklist score on a 0–100 scale before rescaling. The last two columns are the **official HelloBench numbers for the same model judged by GPT-4o**, computed from the official judgement files with the same formula.
+**Score** = HelloBench's rescaled score, (weighted checklist score − 75) × 4: 100 means every checklist item was fully met, 0 means every item was "mostly met" (0.75), negative means worse than that. **Raw** = weighted checklist score on a 0–100 scale before rescaling. The last two columns are the **official HelloBench numbers for the same model judged by GPT-4o**, computed from the official judgement files with this repository's scoring code.
 
 | Task | Items | Score | Raw | Avg. words | Official score (GPT-4o judge) | Official raw |
 |---|---|---|---|---|---|---|
@@ -34,7 +34,7 @@ The rescaling multiplies every raw point below 75 by four, so the 11-point raw g
 | 0.25 | 203 (5%) | 118 (3%) |
 | 0 | 84 (2%) | 25 (1%) |
 
-Both runs scored the same 3,902 checklist items.
+Both runs use the same 3,902 checklist questions, each applied to that run's own responses.
 
 **What the comparison supports:** the task ranking largely agrees. Open-ended QA is the strongest task and heuristic text generation second under both judges. The biggest disagreement is **summarization**: 3rd under GPT-4o, clearly last here. The 14B judge marked many summaries down for being shorter than the "long summary" the instructions ask for and for factual slips against the source text. Long source articles (up to about 9,000 tokens) are also where a 4-bit 14B judge is least reliable.
 
@@ -89,7 +89,7 @@ Small sub-categories (fewer than 5 items) are noisy.
 
 Read a sample of its reasons in `results/.../judgements/*.jsonl` (fields `flaws`, `reason`, `evaluation_score`). From spot checks:
 
-- **Good catches:** a factual error ("quantum entanglement … has not yet been experimentally proven"), scored 0; a guide of about 970 words when 5,000 were requested; a wrong percentage in a report summary.
+- **Good catches:** a factual error ("quantum entanglement … has not yet been experimentally proven"), scored 0; a response of under 1,000 words when 5,000 were requested; a wrong percentage in a report summary.
 - **Weaknesses:** it still sometimes invents meta-flaws ("does not explicitly state the requirement…"), occasionally marks story continuations down for introducing new characters despite being told not to, sets impossible standards ("does not eliminate *all* possible counterarguments"), and some reasons are generic ("lacks specificity").
 
 ## How this differs from the official HelloBench run
@@ -123,7 +123,7 @@ results/qwen2_7b__judge_qwen25_14b/
 
 ### On Kaggle (free GPU T4 × 2)
 1. Create a notebook with **File → Import Notebook** → `notebooks/hellobench_qwen_kaggle_t4x2.ipynb`.
-2. Settings: **Accelerator GPU T4 x2**, **Internet on**. **Add Input → Upload** the 5 files from `data/` as a dataset.
+2. Settings: **Accelerator GPU T4 × 2**, **Internet on**. **Add Input → Upload** the 5 files from `data/` as a dataset.
 3. Run once with `LIMIT = 2` (10 items) and read the judge's reasons (cell 6). Then set `LIMIT = 0` and use **Save Version → Save & Run All**.
 
 The full run took about 10 hours: generation 3 h 50 min, judging 6 h 15 min. Judging would be faster with the current code (see the note below). If a run stops partway, start a new version with the stopped version's output added as an input (**Add Input → Your Work → Notebooks**), copy it into the working folder by adding `!cp -r /kaggle/input/<earlier-notebook>/runs /kaggle/working/` before the run cell, and run again: finished items are skipped.

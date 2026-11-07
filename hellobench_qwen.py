@@ -4,7 +4,8 @@ HelloBench with Qwen 7B: generate -> judge (Qwen as the judge) -> score.
 
 Follows the official HelloBench code (github.com/Quehry/HelloBench, MIT License):
   * generation : run.py / run_qwen2_7b   -> user message = instruction, sampling, temperature 0.8
-  * judging    : llm_judge.py            -> the official checklist-wise judge prompt (verbatim)
+  * judging    : llm_judge.py            -> the official checklist-wise judge prompt (verbatim), plus a
+                                              stricter prompt that is used by default (see below)
   * scoring    : results/scripts/compute.py -> per-sub-category checklist weights (WEIGHT_DICT),
                                               rescale (score - 75) * 4, overall = mean of 5 categories
 
@@ -12,7 +13,7 @@ Differences from the official run (needed for a free Kaggle T4 x2 GPU):
   * the judge is a Qwen model, not GPT-4o; by default with a stricter prompt (--judge_prompt strict),
     because small judges given the official prompt score almost everything 1.0
     (use --judge_prompt official for the verbatim HelloBench prompt)
-  * max_new_tokens defaults to 2048 for generation (official: 16384) and 2048 for judging (official: 4096)
+  * max_new_tokens defaults to 2048 for generation (official: 16384) and 1024 for judging (official: 4096)
 
 Files
 -----
@@ -305,7 +306,7 @@ def run_generate(model, args):
 
 
 # --------------------------------------------------------------------------- #
-# Stage 2: checklist-wise judging (official HelloBench prompt, verbatim)
+# Stage 2: checklist-wise judging (official HelloBench prompt verbatim, plus the strict prompt used by default)
 # --------------------------------------------------------------------------- #
 SYS_PROMPT = """You are a helpful evaluator. Your task is to evaluate the checklists of the responses given by the Large Language Models (LLMs) based on user instructions. These checklists consist of yes or no questions."""
 USER_PROMPT = """Your core task is to evaluate the checklists based on the user's instruction and LLM's response, with each checklist item being a yes or no question indicating a specific aspect that the LLM's response should meet. You need to judge the checklist item based on the instruction and response. The evaluation results are scored from 0 to 1, with 5 scores in total, which are:
@@ -383,7 +384,7 @@ Output ONLY a JSON list with {num_checklist} objects, one per checklist item, in
 
 
 def build_judge_messages(item, response, prompt_style="official"):
-    # official: responses longer than 15000 words are cut to 16000 words
+    # official: responses longer than 15000 words are cut to 16000 words (sic, copied as is from llm_judge.py)
     words = response.split()
     if len(words) > 15000:
         response = " ".join(words[:16000])
